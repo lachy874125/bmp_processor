@@ -11,7 +11,7 @@ This project is a recreational and learning endeavour. Currently, it is simply a
 ## Build
 
 ```bash
-gcc  main.c io_bmp.c -o bmp_processor
+gcc  src/io_bmp.c src/image.c main.c -o bmp_processor
 ```
 
 ## Usage
