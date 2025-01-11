@@ -1,6 +1,6 @@
 # BMP Image Processor
 
-This project is a recreational and learning endeavour. Currently, it is simply a library for reading and writing .bmp files. It is compatibly with most common .bmp file formats. I intend for it to become a command-line tool to perform various image processing actions. The implementation will remain entirely in the C programming language.
+This project is a recreational and learning endeavour. Currently, it is simply a library for reading and writing .bmp files. It is compatible with most common .bmp file formats. I intend for it to become a command-line tool to perform various image processing actions. The implementation will remain entirely in the C programming language.
 
 ## Features
 
