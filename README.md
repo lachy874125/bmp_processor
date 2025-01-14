@@ -17,7 +17,7 @@ cmake --build build
 
 ## Usage
 ```bash
-./bmp_processor input.bmp output.bmp
+./build/app/bmp_processor input.bmp output.bmp
 ```
 
 ## Roadmap

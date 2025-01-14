@@ -1,5 +1,6 @@
 #include "string.h"
 #include "io_bmp.h"
+#include "error.h"
 
 static void toLittleEndian(int32_t* words, int num_words) {
 	const int32_t test = 1; // 4-byte value

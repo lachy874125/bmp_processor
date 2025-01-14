@@ -6,14 +6,6 @@
 #include "stdio.h"
 #include "stdint.h"
 
-// Error codes
-static const int IO_ERR_NO_FILE = -1;		// If file not found
-static const int IO_ERR_FILE_HEADER = -2;	// If header has an error
-static const int IO_ERR_FILE_TRUNC = -3;	// If file ends unexpectely
-static const int IO_ERR_UNSUPPORTED = -4;	// Exception code if file uses an unsupported format.
-static const int IO_ERR_FILE_NOT_OPEN = -5;	// If trying to read/write a file which is not open, or has come to the end.
-static const int IO_ERR_ALLOC = -6;			// If memory allocation fails
-
 // Magic numbers
 static const int BITS_IN_BYTE = 8;
 static const int BMP_FILE_HEADER_SIZE = 14;

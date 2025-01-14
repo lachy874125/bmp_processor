@@ -1,5 +1,6 @@
 #include "io_bmp.h"
 #include "image.h"
+#include "error.h"
 
 void freeImage(Image* image) {
 	if (image == NULL) return;
