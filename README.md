@@ -11,7 +11,8 @@ This project is a recreational and learning endeavour. Currently, it is simply a
 ## Build
 
 ```bash
-gcc  src/io_bmp.c src/image.c main.c -o bmp_processor
+cmake -S . -B build
+cmake --build build
 ```
 
 ## Usage
