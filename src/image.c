@@ -2,7 +2,7 @@
 #include "image.h"
 #include "error.h"
 
-void freeImage(Image* image) {
+void freeImage(Image* const image) {
 	if (image == NULL) return;
 
 	if (image->components != NULL) {
@@ -15,7 +15,7 @@ void freeImage(Image* image) {
 	image->num_components = 0;
 }
 
-int readBmp(const char* in_file, Image* image) {
+int readBmp(const char* const in_file, Image* const image) {
 	int err_code;
 
 	// Read the input image header
@@ -61,7 +61,7 @@ int readBmp(const char* in_file, Image* image) {
 	}
 
 	// Populate image object
-	for (size_t c = 0; c < num_components; ++c) {
+	for (int c = 0; c < num_components; ++c) {
 		Component* component = image->components + c;
 		component->width = width;
 		component->height = height;
@@ -77,7 +77,7 @@ int readBmp(const char* in_file, Image* image) {
 			free(data);
 			return err_code;
 		}
-		for (size_t j = 0; j < width * height; ++j) {
+		for (size_t j = 0; j < (size_t)width * (size_t)height; ++j) {
 			component->data[j] = data[num_components * j + c];
 		}
 	}
@@ -87,7 +87,7 @@ int readBmp(const char* in_file, Image* image) {
 	return 0;
 }
 
-int writeBmp(char* out_file, const Image* image) {
+int writeBmp(const char* const out_file, const Image* const image) {
 	int err_code;
 
 	// Retrieve image component properties
@@ -103,13 +103,13 @@ int writeBmp(char* out_file, const Image* image) {
 
 	// Copy from plane-separated image object to interleaved BGR array
 	for (int p = 0; p < planes; ++p) {
-		for (size_t j = 0; j < width * height; ++j) {
+		for (size_t j = 0; j < (size_t)width * (size_t)height; ++j) {
 			data[planes * j + p] = image->components[p].data[j];
 		}
 	}
 
 	// // Alternate copying method but slower due to division
-	// for (size_t j = 0; j < width * planes * height; ++j) {
+	// for (size_t j = 0; j < (size_t)width * (size_t)planes * (size_t)height; ++j) {
 	// 	data[j] = image->components[j % planes].data[j / planes];
 	// }
 

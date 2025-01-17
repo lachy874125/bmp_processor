@@ -17,12 +17,12 @@ typedef struct Image {
 } Image;
 
 // Frees all memory used by an Image object
-void freeImage(Image* image);
+void freeImage(Image* const image);
 
 // Reads data from a bmp file into an Image object
-int readBmp(const char* in_file, Image* image);
+int readBmp(const char* const in_file, Image* const image);
 
 // Writes data from an Image object to a bmp file
-int writeBmp(char* out_file, const Image* image);
+int writeBmp(const char* const out_file, const Image* const image);
 
 #endif // IMAGE_H

@@ -18,7 +18,7 @@ static void toLittleEndian(int32_t* words, int num_words) {
 	}
 }
 
-int bmpInOpen(BmpIn* bmp_in, const char* fname) {
+int bmpInOpen(BmpIn* const bmp_in, const char* const fname) {
 	// Reset everything
 	memset(bmp_in, 0, sizeof(struct BmpIn));
 
@@ -65,12 +65,13 @@ int bmpInOpen(BmpIn* bmp_in, const char* fname) {
 	return 0;
 }
 
-void bmpInClose(BmpIn* bmp_in) {
+
+void bmpInClose(BmpIn* const bmp_in) {
 	if (bmp_in->in != NULL) fclose(bmp_in->in);
 	memset(bmp_in, 0, sizeof(BmpIn));
 }
 
-int bmpInGetLine(BmpIn* bmp_in, uint8_t* line) {
+int bmpInGetLine(BmpIn* const bmp_in, uint8_t* const line) {
 	// Read next line
 	if ((bmp_in->in == NULL) || (line == NULL) || (bmp_in->num_unread_rows <= 0)) return(IO_ERR_FILE_NOT_OPEN);
 	bmp_in->num_unread_rows--;
@@ -84,7 +85,7 @@ int bmpInGetLine(BmpIn* bmp_in, uint8_t* line) {
 	return 0;
 }
 
-int bmpOutOpen(BmpOut* bmp_out, const char* fname, const int width, const int height, const int num_components) {
+int bmpOutOpen(BmpOut* const bmp_out, const char* const fname, const int width, const int height, const int num_components) {
 
 	// Reset everything
 	memset(bmp_out, 0, sizeof(BmpOut));
@@ -145,12 +146,12 @@ int bmpOutOpen(BmpOut* bmp_out, const char* fname, const int width, const int he
 	return 0;
 }
 
-void bmpOutClose(BmpOut* bmp_out) {
+void bmpOutClose(BmpOut* const bmp_out) {
 	if (bmp_out->out != NULL) fclose(bmp_out->out);
 	memset(bmp_out, 0, sizeof(BmpOut));
 }
 
-int bmpOutWriteLine(BmpOut* bmp_out, const uint8_t* line) {
+int bmpOutWriteLine(BmpOut* const bmp_out, const uint8_t* const line) {
 	// Write next line
 	if ((bmp_out->out == NULL) || (line == NULL) || (bmp_out->num_unwritten_rows <= 0)) return(IO_ERR_FILE_NOT_OPEN);
 	bmp_out->num_unwritten_rows--;

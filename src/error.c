@@ -17,6 +17,14 @@ const char* error_string(error_t error) {
             return "Memory allocation failed.";
         case ISOLATE_GREYSCALE:
             return "Cannot isolate components on greyscale image as there is only one component.";
+        case INVALID_COMMAND:
+            return "Invalid command.";
+        case INVALID_COMMAND_ISOLATE:
+            return "Isolate colour/component command is invalid.";
+        case NULL_IMAGE:
+            return "Image is null.";
+        case NULL_COMPONENT:
+            return "Component is null.";
         default:
             return "Unknown error";
     }

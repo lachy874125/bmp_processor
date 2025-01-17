@@ -8,8 +8,8 @@
 
 // Magic numbers
 static const int BITS_IN_BYTE = 8;
-static const int BMP_FILE_HEADER_SIZE = 14;
-static const int BMP_INFO_HEADER_SIZE = 40;
+static const size_t BMP_FILE_HEADER_SIZE = 14;
+static const size_t BMP_INFO_HEADER_SIZE = 40;
 static const int BMP_TOTAL_HEADER_SIZE = 54;
 
 typedef struct InfoHeader {
@@ -35,15 +35,15 @@ typedef struct InfoHeader {
 
 typedef struct BmpIn {
 	int num_components;
-	int rows;
-	int cols;
+	int32_t rows;
+	int32_t cols;
 	int num_unread_rows;
 	int line_bytes; // Number of bytes in each line, excluding padding
 	int alignment_bytes; // Bytes at end of each line to make a multiple of 4.
 	FILE* in;
 } BmpIn;
 
-int bmpInOpen(BmpIn* bmp_in, const char* fname);
+int bmpInOpen(BmpIn* const bmp_in, const char* const fname);
 /*  Opens the image file with the indicated name, initializing the supplied
 	bmp_in structure to hold working state information for subsequent use
 	with `bmpInClose()' and `bmpInGetLine()'.
@@ -51,9 +51,9 @@ int bmpInOpen(BmpIn* bmp_in, const char* fname);
 	`IO_ERR_NO_FILE', `IO_ERR_FILE_HEADER', `IO_ERR_FILE_TRUNC' or
 	`IO_ERR_UNSUPPORTED'. Otherwise, the function returns 0 for success. */
 
-void bmpInClose(BmpIn* bmp_in);
+void bmpInClose(BmpIn* const bmp_in);
 
-int bmpInGetLine(BmpIn* bmp_in, uint8_t* line);
+int bmpInGetLine(BmpIn* const bmp_in, uint8_t* const line);
 /*  Reads the next line of image data from the file opened using the most
 	recent successful call to `bmpInOpen' (with the same bmp_in
 	structure), storing the recovered samples in the supplied `line' buffer.
@@ -65,15 +65,15 @@ int bmpInGetLine(BmpIn* bmp_in, uint8_t* line);
 
 typedef struct BmpOut {
 	int num_components;
-	int rows;
-	int cols;
+	int32_t rows;
+	int32_t cols;
 	int num_unwritten_rows;
 	int line_bytes; // Number of bytes in each line, not including padding
 	int alignment_bytes; // Number of 0's at end of each line.
 	FILE* out;
 } BmpOut;
 
-int bmpOutOpen(BmpOut* bmp_out, const char* fname, const int width, const int height, const int num_components);
+int bmpOutOpen(BmpOut* const bmp_out, const char* const fname, const int width, const int height, const int num_components);
 /*  Opens an image file with the indicated name for writing, initializing
 	the supplied bmp_out structure to hold working state information for
 	subsequent use with `bmpOutClose()' and `bmpOutWriteLine()'.
@@ -83,9 +83,9 @@ int bmpOutOpen(BmpOut* bmp_out, const char* fname, const int width, const int he
 	cannot be opened, or else `IO_ERR_SUPPORTED' if an illegal combination
 	of parameters is supplied. */
 
-void bmpOutClose(BmpOut* bmp_out);
+void bmpOutClose(BmpOut* const bmp_out);
 
-int bmpOutWriteLine(BmpOut* bmp_out, const uint8_t* line);
+int bmpOutWriteLine(BmpOut* const bmp_out, const uint8_t* const line);
 /*  Writes the next line of image data to the file opened using the most
 	recent successful call to `bmpOutOpen' (with the same bmp_out
 	structure), writing the samples supplied via the `line' buffer.
