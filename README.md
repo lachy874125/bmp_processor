@@ -1,13 +1,8 @@
 # BMP Image Processor
 
-This project is a recreational and learning endeavour in the C programming language. Currently, it is simply a library for reading and writing BMP image files. It is compatible with most common BMP file formats. I intend for it to become a command-line tool to perform various image processing actions.
+This project is a work-in-progress recreational and learning endeavour. Currently, it is simply a library for reading, processing, and writing BMP image files with a command-line tool to interact with the library. It is compatible with most common BMP file formats. The library reads BMP files into an Image UDT that allows for easier implementation of image processing tasks. It can also write a new BMP file from an Image UDT. The currently-implemented image processing functions are:
 
-## Features
-
-- Reads and writes 8-bit (grayscale) and 24-bit (color) BMP files
-- Isolates any combination of the red, green, and blue colour planes
-- Handles both little and big-endian architectures
-- No external dependencies beyond the C standard library
+- [Scale RGB](#scale-rgb)
 
 ## Build
 
@@ -16,11 +11,8 @@ cmake -S . -B build
 cmake --build build
 ```
 
-## Usage
-
-Currently, the tool allows you to scale pixel values of color planes from RGB BMP images to between 0% and 100%.
-
-### Basic usage:
+### Scale RGB
+Allows you to scale pixel values of color planes from RGB BMP images to between 0% and 100%.
 ```bash
 ./build/app/bmp_processor scale-rgb:<colour_options> <input_file> <output_file>
 ```
