@@ -9,14 +9,11 @@ typedef enum {
 	colour_red = 2
 } colour_t;
 
-// Executes an image processing algorithm from the supplied command
-int processImage(Image* const image, const char* const command);
+// Scales (multiplies) each pixel value of each colour component by its respective scaling factor
+error_t scaleRgb(Image* const image, uint8_t scale_red, uint8_t scale_green, uint8_t scale_blue);
 
-// Isolates one or more colour components in an image
-int isolateComponents(Image* const image, const char* colours);
-
-// Sets all values within a colour component to zero
-int zeroComponent(Image* const image, colour_t colour);
+// Scales (multiplies) each pixel value of a single colour component by `scale`
+error_t scaleComponent(Image* const image, const colour_t colour, uint8_t scale);
 
 
 #endif // PROCESS_H

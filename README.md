@@ -18,29 +18,31 @@ cmake --build build
 
 ## Usage
 
-Currently, the tool allows you to isolate specific color planes from RGB BMP images.
+Currently, the tool allows you to scale pixel values of color planes from RGB BMP images to between 0% and 100%.
 
 ### Basic usage:
 ```bash
-./build/app/bmp_processor isolate-<colour_options> <input_file> <output_file>
+./build/app/bmp_processor scale-rgb:<colour_options> <input_file> <output_file>
 ```
 
 where:
-- `<colour_options>`: Any combination of `r` (red), `g` (green), and `b` (blue) characters specifying which color planes to keep. For example, `rb` keeps red and blue planes while removing green. The order of the characters is irrelevant.
-
-- `<input_file>`: Path to the input BMP file
-- `<output_file>`: Path where the processed BMP file will be saved
+- `<colour_options>`: Any combination of `r=<scale>`, `g=<scale>`, `b=<scale>` separated by commas `,`. Order is irrelevant. If any `colour=<scale>` pattern is absent, that colour is not scaled (remains at 100%).
+- `<input_file>`: Path to the input BMP file.
+- `<output_file>`: Path where the processed BMP file will be saved.
 
 ### Examples:
 ```bash
-# Keep only the green plane
-./build/app/bmp_processor isolate-g <input_file> <output_file>
+# Scale each plane by some amount
+./build/app/bmp_processor scale-rgb:r=50,g=34,b=77 <input_file> <output_file>
 
-# Keep only the red and blue color planes
-./build/app/bmp_processor isolate-rb <input_file> <output_file>
+# Remove the red and blue planes (isolate the green plane)
+./build/app/bmp_processor scale-rgb:r=0,b=0 <input_file> <output_file>
+
+# Remove the green plane
+./build/app/bmp_processor scale-rgb:g=0 <input_file> <output_file>
 
 # Keep all planes (no change)
-./build/app/bmp_processor isolate-rgb <input_file> <output_file>
+./build/app/bmp_processor scale-rgb:r=100,g=100,b=100 <input_file> <output_file>
 ```
 
 ## Roadmap

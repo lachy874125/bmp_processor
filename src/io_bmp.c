@@ -62,7 +62,7 @@ int bmpInOpen(BmpIn* const bmp_in, const char* const fname) {
 	bmp_in->num_unread_rows = bmp_in->rows;
 	bmp_in->line_bytes = bmp_in->num_components * bmp_in->cols;
 	bmp_in->alignment_bytes = (4 - bmp_in->line_bytes) & 3; // Pad to a multiple of 4 bytes
-	return 0;
+	return SUCCESS;
 }
 
 
@@ -82,7 +82,7 @@ int bmpInGetLine(BmpIn* const bmp_in, uint8_t* const line) {
 		uint8_t buf[3];
 		if (fread(buf, 1, (size_t)bmp_in->alignment_bytes, bmp_in->in) != (size_t)bmp_in->alignment_bytes) return(IO_ERR_FILE_TRUNC);
 	}
-	return 0;
+	return SUCCESS;
 }
 
 int bmpOutOpen(BmpOut* const bmp_out, const char* const fname, const int width, const int height, const int num_components) {
@@ -143,7 +143,7 @@ int bmpOutOpen(BmpOut* const bmp_out, const char* const fname, const int width, 
 			fputc(0, bmp_out->out);
 		}
 	}
-	return 0;
+	return SUCCESS;
 }
 
 void bmpOutClose(BmpOut* const bmp_out) {
@@ -162,5 +162,5 @@ int bmpOutWriteLine(BmpOut* const bmp_out, const uint8_t* const line) {
 		const uint8_t buf[3] = { 0,0,0 };
 		fwrite(buf, 1, (size_t)bmp_out->alignment_bytes, bmp_out->out);
 	}
-	return 0;
+	return SUCCESS;
 }

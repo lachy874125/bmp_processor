@@ -15,16 +15,16 @@ const char* error_string(error_t error) {
             return "Trying to access a file which is not open!(?)";
         case IO_ERR_ALLOC:
             return "Memory allocation failed.";
-        case ISOLATE_GREYSCALE:
-            return "Cannot isolate components on greyscale image as there is only one component.";
+        case INVALID_IMAGE_RGB:
+            return "Image is not in RGB format.";
         case INVALID_COMMAND:
             return "Invalid command.";
-        case INVALID_COMMAND_ISOLATE:
-            return "Isolate colour/component command is invalid.";
         case NULL_IMAGE:
             return "Image is null.";
         case NULL_COMPONENT:
             return "Component is null.";
+        case INVALID_SCALE:
+            return "Invalid scaling factor.";
         default:
             return "Unknown error";
     }

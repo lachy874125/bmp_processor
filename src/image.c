@@ -2,6 +2,14 @@
 #include "image.h"
 #include "error.h"
 
+error_t initImage(Image** image) {
+	Image* temp = (Image*)calloc(1, sizeof(Image));
+	if (temp == NULL) return IO_ERR_ALLOC;
+
+	*image = temp;
+	return SUCCESS;
+}
+
 void freeImage(Image* const image) {
 	if (image == NULL) return;
 
@@ -15,7 +23,7 @@ void freeImage(Image* const image) {
 	image->num_components = 0;
 }
 
-int readBmp(const char* const in_file, Image* const image) {
+error_t readBmp(Image* const image, const char* const in_file, int x_border, int y_border) {
 	int err_code;
 
 	// Read the input image header
@@ -23,123 +31,123 @@ int readBmp(const char* const in_file, Image* const image) {
 	err_code = bmpInOpen(&bmp_in, in_file);
 	if (err_code != 0) return err_code;
 
-	// Allocate memory
+	// Allocate memory for a row of pixel data
 	const int width = bmp_in.cols;
 	const int height = bmp_in.rows;
+	const int total_width = width + 2 * x_border;
+	const int total_height = height + 2 * y_border;
 	const int num_components = bmp_in.num_components;
-	uint8_t* data = (uint8_t*)malloc(num_components * width * height * sizeof(uint8_t));
-	if (data == NULL) {
+	uint8_t* const line = (uint8_t*)malloc(num_components * width * sizeof(uint8_t));
+	if (line == NULL) {
 		bmpInClose(&bmp_in);
 		err_code = IO_ERR_ALLOC;
 		return err_code;
 	}
 
-	// Read the input image data into array
-	int n = height;
-	uint8_t* line = data;
-	while (n > 0) {
+	// Allocate memory for Image components
+	image->num_components = num_components;
+	image->components = (Component*)malloc(num_components * sizeof(Component));
+	if (image->components == NULL) {
+		err_code = IO_ERR_ALLOC;
+		bmpInClose(&bmp_in);
+		free(line);
+		return err_code;
+	}
+
+	// Allocate memory for Image data
+	for (int p = 0; p < num_components; ++p) {
+		Component* component = image->components + p;
+		component->width = width;
+		component->height = height;
+		component->x_border = x_border;
+		component->y_border = y_border;
+
+		component->data = (uint8_t*)malloc(total_width * total_height * sizeof(uint8_t));
+		if (component->data == NULL) {
+			err_code = IO_ERR_ALLOC;
+
+			// Ensure only allocated components are freed in freeImage()
+			image->num_components = p;
+
+			bmpInClose(&bmp_in);
+			free(line);
+			return err_code;
+		}
+		component->image = component->data + y_border * total_width + x_border;
+	}
+
+	// Copy BMP pixel data into colour components of Image object
+	for (int r = 0; r < height; ++r) {
+		// Read the input image data into array
 		err_code = bmpInGetLine(&bmp_in, line);
 		if (err_code != 0) {
 			bmpInClose(&bmp_in);
-			free(data);
+			free(line);
 			return err_code;
 		}
-		--n;
-		line += width * num_components;
+
+		// Read data from array into colour components
+		for (int p = 0; p < num_components; ++p) {
+			uint8_t* src = line + p;
+			uint8_t* const dst = image->components[p].image + r * total_width;
+
+			for (int c = 0; c < width; ++c) {
+				dst[c] = *src;
+				src += num_components;
+			}
+		}
 	}
 
 	// Close the input image
 	bmpInClose(&bmp_in);
 
-	// Initialise colour-component-separated Image object
-	image->num_components = num_components;
-	image->components = (Component*)malloc(num_components * sizeof(Component));
-	if (image->components == NULL) {
-		err_code = IO_ERR_ALLOC;
-		free(data);
-		return err_code;
-	}
+	free(line);
 
-	// Populate image object
-	for (int c = 0; c < num_components; ++c) {
-		Component* component = image->components + c;
-		component->width = width;
-		component->height = height;
-
-		// Copy data to each component
-		component->data = (uint8_t*)malloc(width * height * sizeof(uint8_t));
-		if (component->data == NULL) {
-			err_code = IO_ERR_ALLOC;
-
-			// Ensure only allocated components are freed by main
-			image->num_components = c;
-
-			free(data);
-			return err_code;
-		}
-		for (size_t j = 0; j < (size_t)width * (size_t)height; ++j) {
-			component->data[j] = data[num_components * j + c];
-		}
-	}
-
-	free(data);
-
-	return 0;
+	return SUCCESS;
 }
 
-int writeBmp(const char* const out_file, const Image* const image) {
+error_t writeBmp(const Image* const image, const char* const out_file) {
 	int err_code;
 
 	// Retrieve image component properties
-	int width = image->components[0].width;
-	int height = image->components[0].height;
-	int planes = image->num_components;
+	const int width = image->components[0].width;
+	const int height = image->components[0].height;
+	const int total_width = width + 2 * image->components[0].x_border;
+	const int num_components = image->num_components;
 
-	uint8_t* data = (uint8_t*)malloc(planes * width * height * sizeof(uint8_t));
-	if (data == NULL) {
+	BmpOut bmp_out;
+	err_code = bmpOutOpen(&bmp_out, out_file, width, height, num_components);
+	if (err_code != 0) return err_code;
+
+	uint8_t* const line = (uint8_t*)malloc(num_components * width * sizeof(uint8_t));
+	if (line == NULL) {
 		err_code = IO_ERR_ALLOC;
 		return err_code;
 	}
 
-	// Copy from plane-separated image object to interleaved BGR array
-	for (int p = 0; p < planes; ++p) {
-		for (size_t j = 0; j < (size_t)width * (size_t)height; ++j) {
-			data[planes * j + p] = image->components[p].data[j];
+	for (int r = 0; r < height; ++r) {
+		// Copy from plane-separated image object to interleaved BGR array
+		for (int p = 0; p < num_components; ++p) {
+			uint8_t* const src = image->components[p].image + r * total_width;
+			uint8_t* dst = line + p;
+
+			for (int c = 0; c < width; ++c) {
+				*dst = src[c];
+				dst += num_components;
+			}
 		}
-	}
 
-	// // Alternate copying method but slower due to division
-	// for (size_t j = 0; j < (size_t)width * (size_t)planes * (size_t)height; ++j) {
-	// 	data[j] = image->components[j % planes].data[j / planes];
-	// }
-
-
-	// Write the image to the output .bmp file
-	BmpOut bmp_out;
-	err_code = bmpOutOpen(&bmp_out, out_file, width, height, planes);
-	if (err_code != 0) {
-		free(data);
-		return err_code;
-	}
-
-	int n = height;
-	uint8_t* line = data;
-	while (n > 0) {
+		// Write data from array into output image
 		err_code = bmpOutWriteLine(&bmp_out, line);
-
-		// Handle write errors
 		if (err_code != 0) {
-			free(data);
+			free(line);
 			bmpOutClose(&bmp_out);
 			return err_code;
 		}
-
-		--n;
-		line += width * planes;
 	}
 
 	bmpOutClose(&bmp_out);
-	free(data);
+	free(line);
 
-	return 0;
+	return SUCCESS;
 }
