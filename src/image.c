@@ -2,7 +2,8 @@
 #include "image.h"
 #include "error.h"
 
-error_t initImage(Image** image) {
+
+Error initImage(Image** image) {
 	Image* temp = (Image*)calloc(1, sizeof(Image));
 	if (temp == NULL) return IO_ERR_ALLOC;
 
@@ -10,12 +11,13 @@ error_t initImage(Image** image) {
 	return SUCCESS;
 }
 
+
 void freeImage(Image* const image) {
 	if (image == NULL) return;
 
 	if (image->components != NULL) {
-		for (int c = 0; c < image->num_components; ++c) {
-			free(image->components[c].data);
+		for (int p = 0; p < image->num_components; ++p) {
+			free(image->components[p].data);
 		}
 		free(image->components);
 	}
@@ -23,13 +25,14 @@ void freeImage(Image* const image) {
 	image->num_components = 0;
 }
 
-error_t readBmp(Image* const image, const char* const in_file, int x_border, int y_border) {
+
+Error readBmp(Image* const image, const char* const in_file, int x_border, int y_border) {
 	int err_code;
 
 	// Read the input image header
 	BmpIn bmp_in;
 	err_code = bmpInOpen(&bmp_in, in_file);
-	if (err_code != 0) return err_code;
+	if (err_code != SUCCESS) return err_code;
 
 	// Allocate memory for a row of pixel data
 	const int width = bmp_in.cols;
@@ -46,7 +49,7 @@ error_t readBmp(Image* const image, const char* const in_file, int x_border, int
 
 	// Allocate memory for Image components
 	image->num_components = num_components;
-	image->components = (Component*)malloc(num_components * sizeof(Component));
+	image->components = (ImageComp*)malloc(num_components * sizeof(ImageComp));
 	if (image->components == NULL) {
 		err_code = IO_ERR_ALLOC;
 		bmpInClose(&bmp_in);
@@ -56,7 +59,7 @@ error_t readBmp(Image* const image, const char* const in_file, int x_border, int
 
 	// Allocate memory for Image data
 	for (int p = 0; p < num_components; ++p) {
-		Component* component = image->components + p;
+		ImageComp* component = image->components + p;
 		component->width = width;
 		component->height = height;
 		component->x_border = x_border;
@@ -80,7 +83,7 @@ error_t readBmp(Image* const image, const char* const in_file, int x_border, int
 	for (int r = 0; r < height; ++r) {
 		// Read the input image data into array
 		err_code = bmpInGetLine(&bmp_in, line);
-		if (err_code != 0) {
+		if (err_code != SUCCESS) {
 			bmpInClose(&bmp_in);
 			free(line);
 			return err_code;
@@ -98,6 +101,14 @@ error_t readBmp(Image* const image, const char* const in_file, int x_border, int
 		}
 	}
 
+	// Perform boundary extension
+	err_code = extendBoundary(image);
+	if (err_code != SUCCESS) {
+		bmpInClose(&bmp_in);
+		free(line);
+		return err_code;
+	}
+
 	// Close the input image
 	bmpInClose(&bmp_in);
 
@@ -106,7 +117,49 @@ error_t readBmp(Image* const image, const char* const in_file, int x_border, int
 	return SUCCESS;
 }
 
-error_t writeBmp(const Image* const image, const char* const out_file) {
+
+Error extendBoundary(Image* const image) {
+	if (image == NULL) return NULL_IMAGE;
+
+	const int num_components = image->num_components;
+	const int width = image->components[0].width;
+	const int x_border = image->components[0].x_border;
+	const int total_width = width + 2 * x_border;
+	const int height = image->components[0].height;
+	const int y_border = image->components[0].y_border;
+
+	if (x_border > width || y_border > height) return BORDER_TOO_LARGE;
+
+	for (int p = 0; p < num_components; ++p) {
+		ImageComp* component = image->components + p;
+		if (component == NULL) return NULL_IMAGE_COMP;
+
+		// Extend horizontally
+		for (int r = 0; r < height; ++r) {
+			uint8_t* left_edge = image->components[p].image + r * total_width - 1;
+			uint8_t* right_edge = left_edge + width + 1;
+			for (int c = 0; c < x_border; ++c) {
+				left_edge[-c] = left_edge[c + 1];
+				right_edge[c] = right_edge[-1 - c];
+			}
+		}
+
+		// Extend vertically
+		for (int c = 0; c < total_width; ++c) {
+			uint8_t* bottom_edge = image->components[p].data + (y_border - 1) * total_width + c;
+			uint8_t* top_edge = bottom_edge + (height + 1) * total_width;
+			for (int r = 0; r < y_border; ++r) {
+				bottom_edge[-r * total_width] = bottom_edge[(r + 1) * total_width];
+				top_edge[r * total_width] = top_edge[(-1 - r) * total_width];
+			}
+		}
+	}
+
+	return SUCCESS;
+}
+
+
+Error writeBmp(const Image* const image, const char* const out_file) {
 	int err_code;
 
 	// Retrieve image component properties
@@ -117,7 +170,7 @@ error_t writeBmp(const Image* const image, const char* const out_file) {
 
 	BmpOut bmp_out;
 	err_code = bmpOutOpen(&bmp_out, out_file, width, height, num_components);
-	if (err_code != 0) return err_code;
+	if (err_code != SUCCESS) return err_code;
 
 	uint8_t* const line = (uint8_t*)malloc(num_components * width * sizeof(uint8_t));
 	if (line == NULL) {
@@ -139,7 +192,7 @@ error_t writeBmp(const Image* const image, const char* const out_file) {
 
 		// Write data from array into output image
 		err_code = bmpOutWriteLine(&bmp_out, line);
-		if (err_code != 0) {
+		if (err_code != SUCCESS) {
 			free(line);
 			bmpOutClose(&bmp_out);
 			return err_code;

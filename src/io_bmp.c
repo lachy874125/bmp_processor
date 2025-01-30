@@ -20,7 +20,7 @@ static void toLittleEndian(int32_t* words, int num_words) {
 
 int bmpInOpen(BmpIn* const bmp_in, const char* const fname) {
 	// Reset everything
-	memset(bmp_in, 0, sizeof(struct BmpIn));
+	memset(bmp_in, 0, sizeof(BmpIn));
 
 	// Open file in read-binary mode
 	bmp_in->in = fopen(fname, "rb");

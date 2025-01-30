@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include "error.h"
 
-const char* error_string(error_t error) {
+const char* getErrorString(Error error) {
     switch (error) {
         case SUCCESS:
             return "Success";
@@ -21,15 +21,31 @@ const char* error_string(error_t error) {
             return "Invalid command.";
         case NULL_IMAGE:
             return "Image is null.";
-        case NULL_COMPONENT:
-            return "Component is null.";
+        case NULL_IMAGE_COMP:
+            return "ImageComp is null.";
+        case NULL_FILTER:
+            return "Filter is null.";
+        case NULL_FILTER_DATA:
+            return "Filter data is null.";
+        case INVALID_FILTER_FORMAT:
+            return "Invalid filter format.";
+        case INVALID_FILTER_DATA:
+            return "Invalid filter data.";
         case INVALID_SCALE:
             return "Invalid scaling factor.";
+        case INSUFFICIENT_BORDER:
+            return "Insufficient border size.";
+        case INVALID_RADIUS_FORMAT:
+            return "Invalid radius format.";
+        case NEGATIVE_RADIUS:
+            return "Radius must be non-negative.";
+        case BORDER_TOO_LARGE:
+            return "Border must be less than or equal to image dimensions.";
         default:
             return "Unknown error";
     }
 }
 
-void error_print(error_t error) {
-    fprintf(stderr, "Error: %s\n", error_string(error));
+void printErrorString(Error error) {
+    fprintf(stderr, "Error: %s\n", getErrorString(error));
 }

@@ -57,7 +57,7 @@ int bmpInGetLine(BmpIn* const bmp_in, uint8_t* const line);
 /*  Reads the next line of image data from the file opened using the most
 	recent successful call to `bmpInOpen' (with the same bmp_in
 	structure), storing the recovered samples in the supplied `line' buffer.
-	Components are interleaved in BGR order within the `line' buffer.
+	ImageComps are interleaved in BGR order within the `line' buffer.
 	If successful, the function returns 0.  If the file terminates
 	unexpectedly, the `IO_ERR_FILE_TRUNC' error code is returned.  If the
 	file is not currently open, or the end has been reached, the
@@ -89,7 +89,7 @@ int bmpOutWriteLine(BmpOut* const bmp_out, const uint8_t* const line);
 /*  Writes the next line of image data to the file opened using the most
 	recent successful call to `bmpOutOpen' (with the same bmp_out
 	structure), writing the samples supplied via the `line' buffer.
-	Components should be interleaved in BGR order within the `line' buffer.
+	ImageComps should be interleaved in BGR order within the `line' buffer.
 	If successful, the function returns 0.  If the file cannot be written
 	(e.g., the disk may be full), the `IO_ERR_FILE_TRUNC' error code is
 	returned.  If the file is not currently open, or the end has been

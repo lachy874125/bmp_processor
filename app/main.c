@@ -4,25 +4,31 @@
 #include "process.h"
 #include "string.h"
 
-// Parse command-line args for colour-scaling and call iamge processing functions
-error_t bmp_processor_scaleRgb(Image* const image, const char* args) {
-	uint8_t scale_red = 100;
-	uint8_t scale_green = 100;
-	uint8_t scale_blue = 100;
+typedef struct {
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+} Rgb;
+
+// Parse command-line args for colour-scaling
+Error parseRgb(Rgb* const rgb, const char* args) {
+	rgb->red = 100;
+	rgb->green = 100;
+	rgb->blue = 100;
 
 	char* p = (char*)args;
 	while (*p != '\0') {
 		if (strncmp(p, "r=", 2) == 0) {
 			char* end;
-			scale_red = strtol(p + 2, &end, 10);
+			rgb->red = strtol(p + 2, &end, 10);
 			p = end;
 		} else if (strncmp(p, "g=", 2) == 0) {
 			char* end;
-			scale_green = strtol(p + 2, &end, 10);
+			rgb->green = strtol(p + 2, &end, 10);
 			p = end;
 		} else if (strncmp(p, "b=", 2) == 0) {
 			char* end;
-			scale_blue = strtol(p + 2, &end, 10);
+			rgb->blue = strtol(p + 2, &end, 10);
 			p = end;
 		} else {
 			return INVALID_COMMAND;
@@ -30,8 +36,64 @@ error_t bmp_processor_scaleRgb(Image* const image, const char* args) {
 		if (*p == ',') p++;
 	}
 
-	return scaleRgb(image, scale_red, scale_green, scale_blue);
+	return SUCCESS;
 }
+
+
+Error processScaleRgbCommand(Image** image, const char* scale_args, const char* input_file) {
+	Rgb rgb;
+	Error err_code = parseRgb(&rgb, scale_args);
+	if (err_code != SUCCESS) return err_code;
+
+	// Initialise image
+	err_code = initImage(image);
+	if (err_code != SUCCESS) return err_code;
+
+	// Read BMP pixel data into Image object
+	err_code = readBmp(*image, input_file, 0, 0);
+	if (err_code != SUCCESS) return err_code;
+
+	// Process image
+	return scaleRgb(*image, rgb.red, rgb.green, rgb.blue);
+}
+
+
+Error processFilterCommand(Image** image, const char* filter_path, const char* input_file) {
+	Filter* filter;
+	Error err_code = initFilter(&filter);
+	if (err_code != SUCCESS) return err_code;
+
+	err_code = parseFilter(filter, filter_path);
+	if (err_code != SUCCESS) {
+		freeFilter(filter);
+		return err_code;
+	}
+
+	int x_border = filter->radius;
+	int y_border = filter->radius;
+		
+	// Initialise image
+	err_code = initImage(image);
+	if (err_code != SUCCESS) {
+		freeFilter(filter);
+		return err_code;
+	}
+
+	// Read BMP pixel data into Image object
+	err_code = readBmp(*image, input_file, x_border, y_border);
+	if (err_code != SUCCESS) {
+		freeFilter(filter);
+		return err_code;
+	}
+
+	// Process image
+	err_code = applyFilter(*image, filter);
+	
+	freeFilter(filter);
+
+	return err_code;
+}
+
 
 int main(int argc, char* argv[]) {
 	// Handle invalid arguments
@@ -45,58 +107,30 @@ int main(int argc, char* argv[]) {
 	const char* input_file = argv[2];
 	const char* output_file = argv[3];
 
-	// Image processing function pointer
-	error_t (*processFunction)(Image* const image, const char* command);
-
-	// Border extension
-	int x_border;
-	int y_border;
-
-	// Map command to image processing function
-	int err_code;
-	const char* command_args;
+	// Process image based on command
+	Image* image;
+	Error err_code;
 	if (strncmp(command, "scale-rgb:", 10) == 0) {
-		x_border = 0;
-		y_border = 0;
-		command_args = command + 10;
-		processFunction = bmp_processor_scaleRgb;
-
+		err_code = processScaleRgbCommand(&image, command + 10, input_file);		
+	} else if (strncmp(command, "filter:", 7) == 0) {
+		err_code = processFilterCommand(&image, command + 7, input_file);
 	} else {
 		err_code = INVALID_COMMAND;
-		error_print(err_code);
-		return err_code;
 	}
 
-	// Initialise image
-	Image* image;
-	err_code = initImage(&image);
-	if (err_code != 0) {
-		error_print(err_code);
-		freeImage(image);
-		return err_code;
-	}
-
-	// Read BMP pixel data into Image object
-	err_code = readBmp(image, input_file, x_border, y_border);
-	if (err_code != 0) {
-		error_print(err_code);
-		freeImage(image);
-		return err_code;
-	}
-
-	// Process image
-	err_code = processFunction(image, command_args);
-	if (err_code != 0) {
-		error_print(err_code);
+	if (err_code != SUCCESS) {
+		printErrorString(err_code);
 		freeImage(image);
 		return err_code;
 	}
 
 	// Write BMP from processed Image object
 	err_code = writeBmp(image, output_file);
-	if (err_code != 0) {
-		error_print(err_code);
+	if (err_code != SUCCESS) {
+		printErrorString(err_code);
 	}
+
+	printf("Image processed successfully.\n");
 
 	freeImage(image);
 
